@@ -3,10 +3,11 @@ Created on Apr 16, 2025
 
 @author: boogie
 '''
-from rkddr import block
+from pyrkddr import block
+from pyrkddr import common
 
 
-class Uart(block.MappedBlock, block.Printable):
+class Uart(block.MappedBlock, common.Printable):
     # definition of class variables here are only for IDE auto complete
     # not needed for actual runtime
     id = 0
@@ -21,7 +22,7 @@ class Uart(block.MappedBlock, block.Printable):
                                                                           ])
 
 
-class Idle(block.MappedBlock, block.Printable):
+class Idle(block.MappedBlock, common.Printable):
     sr = 0
     pr = 0
 
@@ -32,7 +33,7 @@ class Idle(block.MappedBlock, block.Printable):
                                                            ])
 
 
-class Channel(block.MappedBlock, block.Printable):
+class Channel(block.MappedBlock, common.Printable):
     first_scan = 0
     mask = 0
     stride_ype = 0
@@ -48,7 +49,7 @@ class Channel(block.MappedBlock, block.Printable):
                                          ])
 
 
-class T2(block.MappedBlock, block.Printable):
+class T2(block.MappedBlock, common.Printable):
     ext_temp_ref = 0
     link_ecc_en = 0
     per_bank_ref_en = 0
@@ -91,7 +92,7 @@ class T2(block.MappedBlock, block.Printable):
                                                ])
 
 
-class Info(block.MappedBlock, block.Printable):
+class Info(block.MappedBlock, common.Printable):
     uart = Uart
     idle = Idle
     channel = Channel
