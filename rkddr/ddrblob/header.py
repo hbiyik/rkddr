@@ -4,12 +4,13 @@ Created on Apr 16, 2025
 @author: boogie
 '''
 from rkddr import block
+from rkddr import common
 
 
 MAGIC = 0x12345678.to_bytes(4, "little")
 
 
-class Index(block.MappedBlock, block.Printable):
+class Index(block.MappedBlock, common.Printable):
     offset = 0
     len = 0
 
@@ -19,7 +20,7 @@ class Index(block.MappedBlock, block.Printable):
                  encoding="H", bitmasks=[(0, 8), (8, 8)])
 
 
-class SdramInfov2(block.MappedBlock, block.Printable):
+class SdramInfov2(block.MappedBlock, common.Printable):
     version = 0
     cpu_gen = Index
     glob = Index
@@ -32,9 +33,7 @@ class SdramInfov2(block.MappedBlock, block.Printable):
     lp4 = Index
     lp5 = Index
     skew = Index
-    dqmap = Index
-    lp4x = Index
-    hash = Index
+    dq = Index
 
     def __init__(self, buffer, start=None):
         block.MappedBlock.__init__(self, buffer, start=start)
@@ -50,7 +49,43 @@ class SdramInfov2(block.MappedBlock, block.Printable):
                       lp4=Index,
                       lp5=Index,
                       skew=Index,
-                      dqmap=Index,
-                      lp4x=Index,
-                      hash=Index,
+                      dq=Index,
+                      )
+
+    def getblock(self, indexname, Block):
+        if not hasattr(self, indexname):
+            return
+        index = getattr(self, indexname)
+        if not index.len:
+            return
+        return Block(self._f, self.start + index.offset * 4)
+
+
+class SdramInfov3(SdramInfov2):
+    lp4x = Index
+    lp4hash = Index
+
+    def __init__(self, buffer, start=None):
+        SdramInfov2.__init__(self, buffer, start=start)
+        self.addblock(lp4x=Index, lp4hash=Index)
+
+
+class SdramInfov4(SdramInfov3):
+    lp5hash = Index
+    ddr4hash = Index
+    lp3hash = Index
+    ddr3hash = Index
+    lp2hash = Index
+    ddr2hash = Index
+    ddr5hash = Index
+
+    def __init__(self, buffer, start=None):
+        SdramInfov3.__init__(self, buffer, start=start)
+        self.addblock(lp5hash=Index,
+                      ddr4hash=Index,
+                      lp3hash=Index,
+                      ddr3hash=Index,
+                      lp2hash=Index,
+                      ddr2hash=Index,
+                      ddr5hash=Index,
                       )

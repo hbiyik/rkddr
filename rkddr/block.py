@@ -17,29 +17,7 @@
 import struct
 import functools
 
-
-class Printable:
-    def iterattrs(self):
-        for k, _v in self.__dict__.items():
-            if not k.startswith("_"):
-                yield k, getattr(self, k)
-
-        if hasattr(self, "_attrs"):
-            for k, _arrlen in self._attrs.items():
-                if k.startswith("_"):
-                    continue
-                yield k, getattr(self, k)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}: " + ", ".join([f"{k}={repr(v)}" for (k, v) in self.iterattrs()])
-
-
-def maskshift(val, mask, shift):
-    return (val & (2 ** mask - 1)) << shift
-
-
-def shiftmask(val, shift, mask):
-    return (val >> shift) & (2 ** mask - 1)
+from rkddr import common
 
 
 class MappedList(list):
@@ -85,6 +63,10 @@ class MappedBlock:
         self._start = start or self._f.tell()
         self._size = 0
 
+    def dumphandler(self):
+        self._f.seek(0)
+        return self._f.read()
+
     def _arrsize(self, name):
         arrsize = 1
         if "*" in name:
@@ -97,6 +79,26 @@ class MappedBlock:
             attr = attrtype(self._f, self.start + self.size)
             self._size += attr.size
             setattr(self, attrname, attr)
+
+    def getrange(self, attr):
+        for _offset, _size, names, encoding, bitmasks in self._map:
+            if attr not in names:
+                continue
+            index = names.index(attr)
+            minrange = 0
+            if not bitmasks:
+                for replace in ["@", ">", "<", "=", "!"]:
+                    encoding = encoding.replace(replace, "")
+                encoding = encoding[index]
+                size = struct.calcsize(encoding)
+                maxrange = 2 ** (size * 8) - 1
+                if encoding.islower():
+                    maxrange = int((maxrange - 1) / 2)
+                    minrange = -maxrange - 1
+            else:
+                _offset, size = bitmasks[index]
+                maxrange = 2 ** size - 1
+            return minrange, maxrange
 
     @property
     def size(self):
@@ -126,7 +128,7 @@ class MappedBlock:
             return attrs[index]
         else:
             offset, size = bitmasks[index]
-            return shiftmask(attrs[0], offset, size)
+            return common.shiftmask(attrs[0], offset, size)
 
     def _getmap(self, attr):
         for offset, size, names, encoding, bitmasks in self._map:
@@ -157,7 +159,7 @@ class MappedBlock:
                     else:
                         newvalue = 0
                         for i, (bitoffset, size) in enumerate(bitmasks):
-                            newvalue |= maskshift(values[i], size, bitoffset)
+                            newvalue |= common.maskshift(values[i], size, bitoffset)
                         newdata = struct.pack(encoding, newvalue)
                     self._f.seek(offset)
                     self._f.write(newdata)
