@@ -89,7 +89,7 @@ def finddevice(fullpath):
 
 
 def iterdevices():
-    devtypes = ["mtd", "mmcblk", "sda", "sdb", "sdc", "sdd"]
+    devtypes = ["mtdblock", "mmcblk", "sda", "sdb", "sdc", "sdd"]
     for devtype in devtypes:
         for path in os.listdir("/dev"):
             if path.startswith(devtype) and path.replace(devtype, "").isdigit():
@@ -102,7 +102,7 @@ def iterdevices():
 
 def updatebuffer(handler, oldbuf, newbuf, offset, backup=True):
     if not newbuf == oldbuf:
-        isyes = input("Are you sure you want to save the changes [y/N]:")
+        isyes = input("Are you sure you want to save changes [y/N]:")
         if not isyes.lower() == "y":
             print("Changes discarded")
             return
