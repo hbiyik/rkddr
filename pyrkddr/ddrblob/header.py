@@ -31,6 +31,16 @@ class Index(block.MappedBlock, common.Printable):
                  encoding="H", bitmasks=[(0, 8), (8, 8)])
 
 
+class Index16(block.MappedBlock, common.Printable):
+    offset = 0
+    len = 0
+
+    def __init__(self, buffer, start=None):
+        block.MappedBlock.__init__(self, buffer, start=start)
+        self.map(0, 4, "offset", "len",
+                 encoding="I", bitmasks=[(0, 16), (16, 8)])
+
+
 class SdramInfov2(block.MappedBlock, common.Printable):
     version = 0
     cpu_gen = Index
@@ -100,3 +110,21 @@ class SdramInfov4(SdramInfov3):
                       ddr2hash=Index,
                       ddr5hash=Index,
                       )
+
+
+class SdramInfov5(SdramInfov4):
+    chan_pref = Index16
+    com_pref = Index16
+
+    def __init__(self, buffer, start=None):
+        SdramInfov4.__init__(self, buffer, start=start)
+        self._size += 2 + 4 * 2  # reserved 2 bytes 2 undefined prefs
+        # self.addblock(chan_perf=Index16, com_perf=Index16)
+
+
+class SdramInfov6(SdramInfov5):
+    uartiomux = Index16
+
+    def __init__(self, buffer, start=None):
+        SdramInfov5.__init__(self, buffer, start=start)
+        self.addblock(uartiomux=Index16)

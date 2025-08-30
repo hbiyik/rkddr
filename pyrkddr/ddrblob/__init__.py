@@ -6,6 +6,7 @@ from . import ddr
 from . import dq
 from . import skew
 from . import hash
+from . import uart
 
 
 MAGIC = header.MAGIC
@@ -65,7 +66,8 @@ class V4(V3):
     ddr2hash = hash.Mask
 
     def __init__(self, buffer, start=None):
-        self.header = self.header = V4.header(buffer, start)
+        if self.header == V4.header:
+            self.header = self.header = V4.header(buffer, start)
         V3.__init__(self, buffer, start=start)
         self.lp5hash = self.header.getblock("lp5hash", V4.lp5hash)
         self.ddr5hash = self.header.getblock("ddr5hash", V4.ddr5hash)
@@ -77,7 +79,7 @@ class V4(V3):
 
 
 class V5(common.Printable):
-    header = header.SdramInfov4
+    header = header.SdramInfov5
     glob = glob.Info
     lp2 = ddr.Ddr234Lp23_v5
     ddr2 = ddr.Ddr234Lp23_v5
@@ -100,7 +102,8 @@ class V5(common.Printable):
     ddr2hash = hash.Mask
 
     def __init__(self, buffer, start=None):
-        self.header = V5.header(buffer, start)
+        if self.header == V5.header:
+            self.header = V5.header(buffer, start)
         self.glob = self.header.getblock("glob", V5.glob)
         self.lp2 = self.header.getblock("lp2", V5.lp2)
         self.ddr2 = self.header.getblock("ddr2", V5.ddr2)
@@ -123,6 +126,16 @@ class V5(common.Printable):
         self.ddr2hash = self.header.getblock("ddr2hash", V5.ddr2hash)
 
 
+class V6(common.Printable):
+    header = header.SdramInfov6
+    uartiomux = uart.Iomux
+
+    def __init__(self, buffer, start=None):
+        self.header = self.header = V6.header(buffer, start)
+        V5.__init__(self, buffer, start=start)
+        self.uartiomux = self.header.getblock("uartiomux", V6.uartiomux)
+
+
 def get(version):
-    versions = {2: V2, 3: V3, 4: V4, 5: V5}
+    versions = {2: V2, 3: V3, 4: V4, 5: V5, 6: V6}
     return versions.get(version)
