@@ -120,5 +120,5 @@ class Map(block.MappedBlock, common.Printable):
             attrs = []
             for i in range(32):
                 bitmasks.append((2 * i, 2))
-                attrs.append(f"ddr4_cs{cs}_qd{i}")
+                attrs.append(f"ddr4_cs{cs}_dq{i}")
             self.map(0, 8, *attrs, encoding="Q", bitmasks=bitmasks)
