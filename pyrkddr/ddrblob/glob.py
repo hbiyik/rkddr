@@ -82,7 +82,7 @@ class T2(block.MappedBlock, common.Printable):
         block.MappedBlock.__init__(self, buffer, start=start)
         self.map(0, 4, 'ddr_2t', 'ssmod_spread', 'ssmod_div', 'ssmod_downspread',
                        'dis_train_print', "res_space_premap_portion", 'rd_vref_scan_en', 'wr_vref_scan_en', 'eye_2d_scan_en',
-                       "res_space_remap_all",  "auto_precharge_en", "derate_en", "per_bank_ref_en", "link_ecc_en", "ext_temp_ref",
+                       "res_space_remap_all", "auto_precharge_en", "derate_en", "per_bank_ref_en", "link_ecc_en", "ext_temp_ref",
                        '_reservedbit0',
                        encoding="I", bitmasks=[(0, 1),
                                                (1, 8),
@@ -103,18 +103,55 @@ class T2(block.MappedBlock, common.Printable):
                                                ])
 
 
+class Config(block.MappedBlock, common.Printable):
+    tpl_log_en = 0
+    spl_log_en = 0
+    optee_log_en = 0
+    atf_log_en = 0
+    uboot_log_en = 0
+    pstore_buf_size = 0
+    pstore_base_addr = 0
+    boost_fsp = 0
+    page_close = 0
+    dfs_disable = 0
+    first_init_dram_type = 0
+    trfc_mode = 0
+    periodic_interval = 0
+
+    def __init__(self, buffer, start=None):
+        block.MappedBlock.__init__(self, buffer, start=start)
+        self.map(0, 8, "tpl_log_en", "spl_log_en", "optee_log_en", "atf_log_en", "uboot_log_en", "reserved0", "pstore_buf_size", "pstore_base_addr", "reserved1"
+                 "boost_fsp", "page_close", "dfs_disable", "first_init_dram_type", "trfc_mode", "periodic_interva", "reserved2",
+                  encoding="Q", bitmasks=[(0, 1),
+                                          (1, 1),
+                                          (2, 1),
+                                          (3, 1),
+                                          (4, 1),
+                                          (5, 7),
+                                          (12, 4),
+                                          (16, 8),
+                                          (24, 8),
+                                          (32 + 0, 3),
+                                          (32 + 3, 1),
+                                          (32 + 4, 1),
+                                          (32 + 5, 4),
+                                          (32 + 9, 2),
+                                          (32 + 11, 7),
+                                          (32 + 18, 14),
+                                          ])
+
+
 class Info(block.MappedBlock, common.Printable):
     uart = Uart
     idle = Idle
     channel = Channel
     t2 = T2
-    _reserved0 = 0
-    _reserved1 = 0
+    config = Config
     _reserved2 = 0
     _reserved3 = 0
 
     def __init__(self, buffer, start=None):
         block.MappedBlock.__init__(self, buffer, start)
-        self.addblock(uart=Uart, idle=Idle, channel=Channel, tr=T2)
-        self.map(0, 4 * 4, "_reserved0", "_reserved1", "_reserved2", "_reserved3",
+        self.addblock(uart=Uart, idle=Idle, channel=Channel, tr=T2, cofig=Config)
+        self.map(0, 4 * 2, "_reserved2", "_reserved3",
                  encoding="I" * 4)
