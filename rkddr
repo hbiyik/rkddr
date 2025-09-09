@@ -56,7 +56,10 @@ def openfile(fullpath):
 def findblob(buffer):
     f = io.BytesIO(buffer)
     while True:
-        if f.read(4) == ddrblob.MAGIC:
+        inbytes = f.read(4)
+        if not inbytes:
+            return
+        if inbytes == ddrblob.MAGIC:
             version = int.from_bytes(f.read(4), "little")
             Blob = ddrblob.get(version)
             if not Blob:
