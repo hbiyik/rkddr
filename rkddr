@@ -91,10 +91,13 @@ def blobfromidb(handler, offset=common.IDBOFFSET):
     idblock = findidb(handler, offset)
     if not idblock:
         return
-    blob = findblob(idblock.entries[0].blob)
+    for i in range(idblock.numentries):
+        blob = findblob(idblock.entries[i].blob)
+        if blob:
+            break
     if not blob:
         return
-    return idblock, blob
+    return idblock, blob, i
 
 
 def finddevice(fullpath):
@@ -104,8 +107,8 @@ def finddevice(fullpath):
     ret = blobfromidb(handler)
     if not ret:
         return
-    idblock, blob = ret
-    return handler, idblock, blob
+    idblock, blob, index = ret
+    return handler, idblock, blob, index
 
 
 def iterdevices():
@@ -142,9 +145,9 @@ def updatebuffer(handler, oldbuf, newbuf, offset, backup=True):
     return False
 
 
-def updateidb(handler, idblock, blob):
+def updateidb(handler, idblock, blob, index):
     oldidbbuf = idblock.dump()
-    idblock.entries[0].blob = blob.header.dumphandler()
+    idblock.entries[index].blob = blob.header.dumphandler()
     newidbbuf = idblock.dump()
     if updatebuffer(handler, oldidbbuf, newidbbuf, idblock.block * common.BLOCK_SIZE, False):
         backup = getstorage("idb")
@@ -165,9 +168,9 @@ def main():
         ret = finddevice(args.device)
         if not ret:
             return
-        handler, idblock, blob = ret
+        handler, idblock, blob, index = ret
         showtui(blob, f"TPL from '{handler.name}' at block {idblock.block}")
-        updateidb(handler, idblock, blob)
+        updateidb(handler, idblock, blob, index)
     elif args.idb:
         handler = openfile(args.idb)
         if not handler:
@@ -175,9 +178,9 @@ def main():
         ret = blobfromidb(handler, 0)
         if not ret:
             return
-        idblock, blob = ret
+        idblock, blob, index = ret
         showtui(blob, f"IDB from '{handler.name}' at block 0")
-        updateidb(handler, idblock, blob)
+        updateidb(handler, idblock, blob, index)
     elif args.blob:
         handler = openfile(args.blob)
         if not handler:
@@ -189,9 +192,9 @@ def main():
         showtui(blob, f"BLOB from '{args.blob}'")
         updatebuffer(handler, oldbuf, blob.header.dumphandler(), 0)
     else:
-        for handler, idblock, blob in iterdevices():
+        for handler, idblock, blob, index in iterdevices():
             showtui(blob, f"TPL from '{handler.name}' at block {idblock.block}")
-            updateidb(handler, idblock, blob)
+            updateidb(handler, idblock, blob, index)
             break
 
     if handler:
